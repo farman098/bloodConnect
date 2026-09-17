@@ -1,0 +1,243 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+    --paper: #f5f0e6;
+    --paper-2: #ece3d0;
+    --ink: #12232e;
+    --soft: #3c5265;
+    --red: #e1473b;
+    --red-dark: #b43128;
+    --line: #d8cfba;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-width: 320px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.auth-page {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.auth-art {
+    padding: 8%;
+    display: flex;
+    align-items: flex-end;
+    position: relative;
+    overflow: hidden;
+    color: var(--paper);
+    background: var(--ink);
+}
+
+.auth-art::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: .3;
+    background: linear-gradient(rgba(245, 240, 230, .08) 1px, transparent 1px), linear-gradient(90deg, rgba(245, 240, 230, .08) 1px, transparent 1px);
+    background-size: 42px 42px;
+}
+
+.auth-art::after {
+    content: 'PULSE / DONOR COMMUNITY';
+    position: absolute;
+    top: 42px;
+    left: 8%;
+    color: #b9c7d6;
+    font-size: 11px;
+    letter-spacing: .12em;
+}
+
+.auth-art-content {
+    position: relative;
+    max-width: 420px;
+}
+
+.auth-art h1 {
+    margin: 0;
+    font-size: clamp(38px, 5vw, 64px);
+    line-height: 1.02;
+    letter-spacing: -.04em;
+}
+
+.auth-art h1 span {
+    color: #e8a33d;
+}
+
+.auth-art p {
+    max-width: 34ch;
+    margin: 22px 0 0;
+    color: #b9c7d6;
+    line-height: 1.65;
+}
+
+.auth-mark {
+    position: absolute;
+    width: 220px;
+    height: 275px;
+    top: 18%;
+    right: 16%;
+    transform: rotate(45deg);
+    border-radius: 70% 70% 70% 15%;
+    background: linear-gradient(145deg, #ed6257, #8f211e);
+    box-shadow: 0 28px 90px rgba(225, 71, 59, .35);
+}
+
+.auth-panel {
+    width: min(450px, 84%);
+    align-self: center;
+    justify-self: center;
+    padding: 40px 0;
+}
+
+.auth-brand {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 60px;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.auth-brand-mark {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.auth-kicker {
+    color: var(--red);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.auth-panel h2 {
+    margin: 12px 0;
+    font-size: clamp(32px, 4vw, 48px);
+    line-height: 1.05;
+    letter-spacing: -.035em;
+}
+
+.auth-panel>p {
+    margin: 0 0 30px;
+    color: var(--soft);
+    line-height: 1.6;
+}
+
+.auth-form {
+    display: grid;
+    gap: 16px;
+}
+
+.auth-form label {
+    display: grid;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.auth-form input,
+.auth-form select {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid var(--line);
+    border-radius: 4px;
+    background: #fffaf2;
+    color: var(--ink);
+    font: inherit;
+    outline: none;
+}
+
+.auth-form input:focus,
+.auth-form select:focus {
+    border-color: var(--red);
+}
+
+.auth-submit {
+    margin-top: 5px;
+    padding: 14px 20px;
+    border: 2px solid var(--red);
+    border-radius: 4px;
+    background: var(--red);
+    color: var(--paper);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.auth-submit:hover {
+    background: var(--red-dark);
+    border-color: var(--red-dark);
+}
+
+.auth-submit:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+.auth-message {
+    min-height: 18px;
+    margin: 0;
+    color: var(--red-dark);
+    font-size: 13px;
+}
+
+.auth-switch {
+    margin-top: 22px;
+    color: var(--soft);
+    font-size: 13px;
+    text-align: center;
+}
+
+.auth-switch a {
+    color: var(--red-dark);
+    font-weight: 700;
+}
+
+@media (max-width: 760px) {
+    .auth-page {
+        display: block;
+    }
+
+    .auth-art {
+        min-height: 300px;
+        padding: 80px 8% 36px;
+    }
+
+    .auth-mark {
+        width: 120px;
+        height: 150px;
+        top: 16%;
+        right: 12%;
+    }
+
+    .auth-panel {
+        width: 86%;
+        padding: 42px 0 58px;
+    }
+
+    .auth-brand {
+        margin-bottom: 40px;
+    }
+}
