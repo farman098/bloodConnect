@@ -9,13 +9,7 @@ import {
 } from "./pages.jsx";
 import AdminPage from "./AdminPage.jsx";
 
-const navLinks = [
-    ["Why Pulse", "why-pulse"],
-    ["Impact", "impact"],
-    ["Donors", "donors"],
-    ["Resources", "resources"],
-    ["Contact", "contact"],
-];
+const navLinks = ["Why Pulse", "Impact", "Donors", "Resources", "Contact"];
 
 const stats = [
     { value: "12k+", label: "Lives supported" },
@@ -117,9 +111,9 @@ function HomePage() {
                 </div>
 
                 <nav aria-label="Main navigation">
-                    { navLinks.map(([label, target]) => (
-                        <a href={ `#${target}` } key={ label }>
-                            { label }
+                    { navLinks.map((link) => (
+                        <a href={ link === "Contact" ? "#contact" : "#" } key={ link }>
+                            { link }
                         </a>
                     )) }
                 </nav>
@@ -198,7 +192,7 @@ function HomePage() {
                     </div>
                 </section>
 
-                <section className="stats-bar" id="impact" aria-label="Community impact stats">
+                <section className="stats-bar" aria-label="Community impact stats">
                     { stats.map((item) => (
                         <div key={ item.label } className="stat-card">
                             <strong>{ item.value }</strong>
@@ -207,7 +201,7 @@ function HomePage() {
                     )) }
                 </section>
 
-                <section className="feature-section" id="why-pulse">
+                <section className="feature-section">
                     <div className="section-heading">
                         <div className="section-label">How it works</div>
                         <h2>Faster coordination. Safer outcomes.</h2>
@@ -224,7 +218,7 @@ function HomePage() {
                     </div>
                 </section>
 
-                <section className="dashboard-panel" id="donors">
+                <section className="dashboard-panel">
                     <div className="dashboard-header">
                         <div className="section-label">Live requests</div>
                         <h2>Emergency needs across the network</h2>
@@ -310,7 +304,7 @@ function HomePage() {
                     </div>
                 </section>
 
-                <section className="process-section" id="resources">
+                <section className="process-section">
                     <div className="section-heading narrow">
                         <div className="section-label">Our process</div>
                         <h2>Three simple steps from request to rescue.</h2>
