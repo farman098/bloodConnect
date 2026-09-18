@@ -24,6 +24,7 @@ const userSchema = new mongoose.Schema(
             enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
             required: true,
         },
+        city: { type: String, trim: true, maxlength: 100 },
         age: { type: Number, min: 16, max: 100 },
         eligibility: {
             type: String,

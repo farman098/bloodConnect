@@ -15,7 +15,7 @@ const responseSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: {
-                values: ["pending", "accepted", "declined"],
+                values: ["pending", "accepted", "declined", "cancelled", "completed"],
                 message: "{VALUE} is not a valid response status",
             },
             default: "pending",

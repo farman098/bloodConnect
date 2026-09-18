@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./app.css";
-import { apiRequest } from "./api.js";
+import { apiRequest, getSession, goTo } from "./api.js";
 import {
     AuthPage,
     DashboardPage,
@@ -17,51 +17,30 @@ const navLinks = [
     ["Contact", "contact"],
 ];
 
-const stats = [
-    { value: "12k+", label: "Lives supported" },
-    { value: "4.9/5", label: "Community rating" },
-    { value: "2 hrs", label: "Average response time" },
-    { value: "98%", label: "Request fulfillment" },
-];
-
-const highlights = [
-    {
-        title: "Urgent matching",
-        text: "Connect verified donors and recipients in real time with faster, smarter coordination.",
-    },
-    {
-        title: "Trusted network",
-        text: "Every request is routed through a secure, medically-aware platform built for life-saving support.",
-    },
-    {
-        title: "Community-led care",
-        text: "Encourage local engagement, transparent communication, and consistent donor participation.",
-    },
-];
-
 const steps = [
     "Create a request with blood type and urgency details.",
     "Match with verified donors and local responders.",
     "Coordinate safely and receive support without delay.",
 ];
 
-const emergencyRequests = [
-    { hospital: "City Hospital", blood: "O+", city: "Lahore", urgency: "Critical" },
-    { hospital: "Shifa Medical", blood: "A-", city: "Islamabad", urgency: "Urgent" },
-    { hospital: "Maroof Clinic", blood: "B+", city: "Karachi", urgency: "Priority" },
-];
-
 function HomePage() {
+    const [stats, setStats] = useState([]);
+    const [recentRequests, setRecentRequests] = useState([]);
+    const [ratings, setRatings] = useState({ ratings: [], average: 0, count: 0 });
+    const [loading, setLoading] = useState(true);
     const [loginForm, setLoginForm] = useState({ email: "", password: "" });
     const [requestForm, setRequestForm] = useState({
         patientName: "",
         bloodType: "O+",
+        units: 1,
+        hospital: "",
         city: "Lahore",
         urgency: "Urgent",
     });
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [requestMessage, setRequestMessage] = useState("");
     const [contactMessage, setContactMessage] = useState("");
+    const [ratingMessage, setRatingMessage] = useState("");
 
     const handleLoginChange = (event) => {
         const { name, value } = event.target;
@@ -80,16 +59,67 @@ function HomePage() {
         }
     };
 
-    const handleRequestSubmit = (event) => {
+    useEffect(() => {
+        const loadHomeData = async () => {
+            try {
+                const [homeData, ratingData] = await Promise.all([apiRequest("/home"), apiRequest("/ratings")]);
+                setStats(homeData.stats || []);
+                setRecentRequests(homeData.recentRequests || []);
+                setRatings(ratingData || { ratings: [], average: 0, count: 0 });
+            } catch (error) {
+                setStats([]);
+                setRecentRequests([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadHomeData();
+    }, []);
+
+    const handleRatingSubmit = async (event) => {
         event.preventDefault();
-        if (!requestForm.patientName) {
-            setRequestMessage("Please enter patient name to continue.");
+        const { token } = getSession();
+        if (!token) {
+            setRatingMessage("Please log in before submitting a rating.");
+            goTo("/login.html");
+            return;
+        }
+        const form = event.currentTarget;
+        try {
+            await apiRequest("/ratings", {
+                method: "POST",
+                body: JSON.stringify(Object.fromEntries(new FormData(form))),
+            });
+            form.reset();
+            setRatingMessage("Thanks. Your rating is now visible on the homepage.");
+        } catch (error) {
+            setRatingMessage(error.message || "Unable to submit your rating.");
+        }
+    };
+
+    const handleRequestSubmit = async (event) => {
+        event.preventDefault();
+        const { token, user } = getSession();
+        if (!token || user?.role !== "requester") {
+            setRequestMessage("Please log in with a requester account before submitting a blood request.");
+            setTimeout(() => goTo("/login.html"), 1200);
             return;
         }
 
-        setRequestMessage(
-            `${requestForm.patientName}'s ${requestForm.bloodType} request for ${requestForm.city} has been submitted to verified donors.`
-        );
+        setRequestMessage("Submitting request...");
+        try {
+            await apiRequest("/requests", {
+                method: "POST",
+                body: JSON.stringify(requestForm),
+            });
+            const data = await apiRequest("/home");
+            setStats(data.stats || []);
+            setRecentRequests(data.recentRequests || []);
+            setRequestForm({ patientName: "", bloodType: "O+", units: 1, hospital: "", city: "Lahore", urgency: "Urgent" });
+            setRequestMessage("Blood request submitted. Admins and donors can now see it.");
+        } catch (error) {
+            setRequestMessage(error.message || "Unable to submit the blood request.");
+        }
     };
 
     const handleContactSubmit = async (event) => {
@@ -199,12 +229,22 @@ function HomePage() {
                 </section>
 
                 <section className="stats-bar" id="impact" aria-label="Community impact stats">
-                    { stats.map((item) => (
+                    { loading ? (
+                        <div className="stat-card loading-state">
+                            <strong>…</strong>
+                            <span>Loading impact data</span>
+                        </div>
+                    ) : stats.length ? stats.map((item) => (
                         <div key={ item.label } className="stat-card">
                             <strong>{ item.value }</strong>
                             <span>{ item.label }</span>
                         </div>
-                    )) }
+                    )) : (
+                        <div className="stat-card empty-state">
+                            <strong>0</strong>
+                            <span>No stats available yet</span>
+                        </div>
+                    ) }
                 </section>
 
                 <section className="feature-section" id="why-pulse">
@@ -214,9 +254,22 @@ function HomePage() {
                     </div>
 
                     <div className="feature-grid">
-                        { highlights.map((item) => (
+                        { [
+                            {
+                                title: "Urgent matching",
+                                text: "Connect verified donors and recipients in real time with faster, smarter coordination.",
+                            },
+                            {
+                                title: "Trusted network",
+                                text: "Every request is routed through a secure, medically-aware platform built for life-saving support.",
+                            },
+                            {
+                                title: "Community-led care",
+                                text: "Encourage local engagement, transparent communication, and consistent donor participation.",
+                            },
+                        ].map((item, index) => (
                             <article key={ item.title } className="feature-card">
-                                <span className="feature-index">0{ highlights.indexOf(item) + 1 }</span>
+                                <span className="feature-index">0{ index + 1 }</span>
                                 <h3>{ item.title }</h3>
                                 <p>{ item.text }</p>
                             </article>
@@ -232,16 +285,34 @@ function HomePage() {
 
                     <div className="dashboard-grid">
                         <div className="request-list">
-                            { emergencyRequests.map((request) => (
-                                <div key={ `${request.hospital}-${request.blood}` } className="request-item">
-                                    <div className="request-tag">{ request.blood }</div>
+                            { loading ? (
+                                <div className="request-item loading-state">
+                                    <div className="request-tag">…</div>
                                     <div>
-                                        <strong>{ request.hospital }</strong>
+                                        <strong>Loading requests</strong>
+                                        <span>Please wait</span>
+                                    </div>
+                                    <small>Live</small>
+                                </div>
+                            ) : recentRequests.length ? recentRequests.map((request) => (
+                                <div key={ request.id || `${request.hospital}-${request.bloodType}` } className="request-item">
+                                    <div className="request-tag">{ request.bloodType }</div>
+                                    <div>
+                                        <strong>{ request.hospital || request.patientName }</strong>
                                         <span>{ request.city }</span>
                                     </div>
                                     <small>{ request.urgency }</small>
                                 </div>
-                            )) }
+                            )) : (
+                                <div className="request-item empty-state">
+                                    <div className="request-tag">0</div>
+                                    <div>
+                                        <strong>No requests</strong>
+                                        <span>No active blood requests right now</span>
+                                    </div>
+                                    <small>Idle</small>
+                                </div>
+                            ) }
                         </div>
 
                         <div className="action-stack">
@@ -278,6 +349,22 @@ function HomePage() {
                                         value={ requestForm.patientName }
                                         onChange={ handleRequestChange }
                                     />
+                                    <input
+                                        type="text"
+                                        name="hospital"
+                                        placeholder="Hospital"
+                                        value={ requestForm.hospital }
+                                        onChange={ handleRequestChange }
+                                    />
+                                    <input
+                                        type="number"
+                                        name="units"
+                                        min="1"
+                                        max="20"
+                                        placeholder="Units"
+                                        value={ requestForm.units }
+                                        onChange={ handleRequestChange }
+                                    />
                                     <select name="bloodType" value={ requestForm.bloodType } onChange={ handleRequestChange }>
                                         <option value="O+">O+</option>
                                         <option value="O-">O-</option>
@@ -296,9 +383,9 @@ function HomePage() {
                                         onChange={ handleRequestChange }
                                     />
                                     <select name="urgency" value={ requestForm.urgency } onChange={ handleRequestChange }>
+                                        <option value="Normal">Normal</option>
                                         <option value="Urgent">Urgent</option>
                                         <option value="Critical">Critical</option>
-                                        <option value="Priority">Priority</option>
                                     </select>
                                     <button type="submit" className="submit-btn accent">
                                         Submit request
@@ -308,6 +395,30 @@ function HomePage() {
                             </div>
                         </div>
                     </div>
+                </section>
+
+                <section className="testimonial" id="ratings">
+                    <div className="section-label">Community ratings</div>
+                    <h2>Real experiences from the Pulse community.</h2>
+                    <div className="rating-summary">
+                        <strong>{ ratings.average ? ratings.average.toFixed(1) : "--" }</strong>
+                        <span>{ ratings.count ? `${ratings.count} approved rating${ratings.count === 1 ? "" : "s"}` : "No ratings yet" }</span>
+                    </div>
+                    <div className="rating-grid">
+                        { ratings.ratings.length ? ratings.ratings.map((item) => (
+                            <article className="rating-card" key={ item._id }>
+                                <div className="rating-stars" aria-label={ `${item.rating} out of 5 stars` }>{ "★".repeat(item.rating) }{ "☆".repeat(5 - item.rating) }</div>
+                                <blockquote>&ldquo;{ item.comment }&rdquo;</blockquote>
+                                <strong>{ item.name }</strong>
+                            </article>
+                        )) : <p className="rating-empty">Be the first community member to share an experience.</p> }
+                    </div>
+                    <form className="rating-form" onSubmit={ handleRatingSubmit }>
+                        <label>Rating<select name="rating" defaultValue="5"><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select></label>
+                        <label>Your experience<textarea name="comment" rows="3" maxLength="500" placeholder="Tell the community about your experience..." required /></label>
+                        <button type="submit" className="submit-btn">Share rating</button>
+                    </form>
+                    { ratingMessage && <p className="rating-message" aria-live="polite">{ ratingMessage }</p> }
                 </section>
 
                 <section className="process-section" id="resources">

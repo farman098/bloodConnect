@@ -7,8 +7,8 @@ const bloodRequestSchema = new mongoose.Schema(
         units: { type: Number, required: true, min: 1, max: 20 },
         hospital: { type: String, required: true, trim: true },
         city: { type: String, required: true, trim: true },
-        urgency: { type: String, enum: ["Normal", "Urgent", "Critical"], default: "Urgent" },
-        status: { type: String, enum: ["Open", "Matched", "Completed"], default: "Open" },
+        urgency: { type: String, enum: ["Normal", "Urgent", "Critical", "Scheduled"], default: "Urgent" },
+        status: { type: String, enum: ["Open", "Pending", "Matched", "Completed"], default: "Open" },
         createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
         donorResponses: [{
             donor: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

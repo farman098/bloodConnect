@@ -7,6 +7,8 @@ import requestRoutes from "./routes/requests.js";
 import profileRoutes from "./routes/profile.js";
 import contactRoutes from "./routes/contact.js";
 import adminRoutes from "./routes/admin.js";
+import homeRoutes from "./routes/home.js";
+import ratingRoutes from "./routes/ratings.js";
 
 dotenv.config();
 dotenv.config({ path: "./atlas-credentials.env" });
@@ -28,6 +30,8 @@ app.use("/api/requests", requestRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/home", homeRoutes);
+app.use("/api/ratings", ratingRoutes);
 
 app.get("/", (req, res) => {
     res.send("welcome to blood connecty");
